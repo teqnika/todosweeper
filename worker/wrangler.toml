@@ -1,0 +1,6 @@
+name = "swipe-todo-worker"
+compatibility_date = "2024-01-01"
+
+[vars]
+# 本番は wrangler secret put ASANA_TOKEN で設定
+ASANA_PROJECT_ID = "1202804017257914"

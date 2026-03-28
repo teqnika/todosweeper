@@ -1,0 +1,34 @@
+{
+  "name": "Swipe Todo",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:22-bookworm",
+
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+
+  "postCreateCommand": "npm install --prefix frontend && npm install --prefix worker",
+
+  "forwardPorts": [5173, 8787],
+  "portsAttributes": {
+    "5173": { "label": "Vite (frontend)" },
+    "8787": { "label": "Wrangler (worker)" }
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "cloudflare.cloudflare-workers-bindings"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+      }
+    }
+  },
+
+  "remoteEnv": {
+    "VITE_API_URL": "http://localhost:8787"
+  }
+}
