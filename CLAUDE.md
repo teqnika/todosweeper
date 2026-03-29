@@ -4,67 +4,220 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Swipe Todo** — Tinder-style card-swipe task manager backed by Asana as the database. All infrastructure runs on Cloudflare's free tier.
+**Swipe Todo** — Tinder風のカードスワイプUIを持つタスク管理アプリ。Asanaをデータベースとして使用し、すべてのインフラはCloudflareの無料プランで動作する。
 
-- `frontend/` — React + Vite (TypeScript/JSX) → deployed to Cloudflare Pages
-- `worker/` — Hono API on Cloudflare Workers → proxies all CRUD to the Asana API
+- `frontend/` — React + Vite (TypeScript/JSX) → Cloudflare Pagesにデプロイ
+- `worker/` — Hono API on Cloudflare Workers → 全CRUDをAsana APIにプロキシ
 
-There is no traditional database. Asana is the persistence layer. The worker translates between the app's `Todo` shape and Asana tasks, packing `priority` and `snoozedUntil` into the Asana `notes` field using a `\n---\n` separator.
+従来のデータベースは存在しない。Asanaが永続化レイヤー。Workerは`Todo`型とAsanaタスクを相互変換し、`priority`と`snoozedUntil`をAsanaの`notes`フィールドに`\n---\n`区切りでシリアライズする。
+
+---
+
+## Directory Structure
+
+```
+todosweeper/
+├── .devcontainer/
+│   └── devcontainer.json        # Node 22 (Bookworm) dev container
+├── frontend/
+│   ├── package.json             # React, Vite, TypeScript, wrangler
+│   └── src/
+│       ├── App.jsx              # メインReactアプリ（全UI・状態管理）
+│       └── api.ts               # 型付きAPIクライアント
+├── worker/
+│   ├── package.json             # Hono, @cloudflare/workers-types, wrangler
+│   ├── wrangler.toml            # Worker設定・ASANA_PROJECT_ID
+│   └── src/
+│       └── index.ts             # Hono APIサーバー（単一ファイル）
+├── ASANA_INTEGRATION.md         # App.jsx → api.ts 統合パッチ手順（12ステップ）
+├── CLAUDE.md                    # 本ファイル
+└── README.md                    # 機能仕様書（日本語）
+```
+
+---
 
 ## Commands
 
 ### Frontend (`cd frontend`)
 ```bash
-npm run dev      # Vite dev server (default port 5173)
-npm run build    # TypeScript compile + Vite bundle → dist/
+npm run dev      # Vite dev server (デフォルトポート 5173)
+npm run build    # TypeScriptコンパイル + Viteバンドル → dist/
 npm run deploy   # build + wrangler pages deploy dist
 ```
 
 ### Worker (`cd worker`)
 ```bash
-npm run dev      # wrangler dev (local Worker at http://localhost:8787)
+npm run dev      # wrangler dev (ローカルWorker http://localhost:8787)
 npm run deploy   # wrangler deploy to Cloudflare
 ```
 
-### Local development setup
-Create `frontend/.env.local`:
+### ローカル開発セットアップ
+
+1. `frontend/.env.local` を作成:
 ```
 VITE_API_URL=http://localhost:8787
 ```
-The Asana token must be set as a Wrangler secret for the worker:
+
+2. AsanaトークンをWranglerシークレットとして設定:
 ```bash
 wrangler secret put ASANA_TOKEN
 ```
-`ASANA_PROJECT_ID` is set in `worker/wrangler.toml` for non-production; override with a secret in production.
+
+`ASANA_PROJECT_ID`は`worker/wrangler.toml`に設定済み（開発用: `1202804017257914`）。本番環境ではシークレットで上書きすること。
+
+---
+
+## Tech Stack
+
+| レイヤー | 技術 |
+|---------|------|
+| フロントエンド | React 18 + TypeScript + Vite |
+| API | Hono 4 on Cloudflare Workers |
+| データベース | Asana（永続化レイヤーとして使用） |
+| スタイリング | インラインCSS（CSSフレームワーク不使用） |
+| 認証 | Asana Bearer トークン |
+| デプロイ | Cloudflare Pages + Wrangler CLI |
+
+---
 
 ## Architecture
 
-### Data flow
+### データフロー
 ```
 App.jsx ──(api.ts)──► Worker (Hono) ──► Asana REST API
-                       ↑ translates Todo ↔ AsanaTask
+                         ↑ Todo ↔ AsanaTask 変換
 ```
 
-**`frontend/src/api.ts`** — typed fetch wrapper. `VITE_API_URL` is the base URL; empty string in production (same-origin via Pages proxy or direct Worker URL).
+### `frontend/src/api.ts`
+型付きfetchラッパー。`VITE_API_URL`をベースURLとする（本番は空文字列＝同一オリジン）。
 
-**`worker/src/index.ts`** — single-file Hono app. Key concern: `priority` and `snoozedUntil` are not Asana native fields; they are serialized into `notes` as:
+**エクスポートする型:**
+```typescript
+type Todo = {
+  id: string;           // Asana task gid
+  title: string;
+  memo: string;
+  completed: boolean;
+  dueDate: string | null;
+  priority: number;
+  snoozedUntil: string | null;
+};
 ```
-<memo text>
+
+**エクスポートする関数:**
+| 関数 | メソッド | パス |
+|------|---------|------|
+| `fetchTodos()` | GET | `/api/todos` |
+| `createTodo(data)` | POST | `/api/todos` |
+| `bulkCreateTodos(titles)` | POST | `/api/todos/bulk` |
+| `updateTodo(id, data)` | PATCH | `/api/todos/:id` |
+| `completeTodo(id, completed)` | PATCH | `/api/todos/:id/complete` |
+| `deleteTodo(id)` | DELETE | `/api/todos/:id` |
+
+### `worker/src/index.ts`
+単一ファイルのHonoアプリ。全ルートにCORSミドルウェアを適用。
+
+**重要な実装詳細:**
+- `priority`と`snoozedUntil`はAsanaネイティブフィールドではないため、`notes`フィールドに以下の形式でシリアライズ:
+  ```
+  メモ本文
+  ---
+  priority:2
+  snoozedUntil:2026-03-29
+  ```
+- `toTodo(task)` — Asanaタスク → アプリ形式に変換（`\n---\n`でメモとメタデータを分割）
+- `toNotes(memo, priority, snoozedUntil)` — アプリ形式 → Asana notes文字列に変換
+- **PATCHは必ず現在のタスクを先にフェッチしてフィールドをマージする**（部分更新のため）
+
+### `frontend/src/App.jsx`
+単一ファイルのReactアプリ。全UI状態をここで管理。インラインCSSで自己完結。
+
+**主要な状態:**
+| state | 説明 |
+|-------|------|
+| `todos` | アクティブなタスク配列 |
+| `done` | 完了済みタスク配列 |
+| `trash` | ゴミ箱タスク配列（クライアントサイドのみ） |
+| `history` | Undo用スナップショットスタック `{ todos, done, trash }[]` |
+| `loading` | Asanaからのデータ取得中フラグ |
+
+**主要なコンポーネント:**
+- `DeleteConfirmModal` — タスク削除確認ダイアログ
+- `TodoCard` — ドラッグ可能なカードコンポーネント（ポインターイベント処理）
+- `ActionButton` — 汎用アクションボタン
+- `BulkAddModal` — 一括タスク作成モーダル
+- `EditModal` — タスクのメモ・期限日編集モーダル
+- `ListView` — タスク一覧（All/Active/Done/Trash フィルター付き）
+
 ---
-priority:2
-snoozedUntil:2026-03-29
-```
-`toTodo()` deserializes; `toNotes()` serializes. PATCH always fetches the current task first to merge fields.
 
-**`frontend/src/App.jsx`** — single-file React app. All UI state lives here (`todos`, `done`, `trash`, `history` for undo). The app UI is self-contained with inline styles. `ASANA_INTEGRATION.md` documents the diff patches needed to wire `App.jsx` to `api.ts` (the integration may still be partially in-progress).
+## Swipe Mechanics
 
-### Swipe mechanics
-- `SWIPE_THRESHOLD = 80px` — minimum drag to register a swipe
-- `< 8px` drag is treated as a tap → opens edit modal
-- Direction: horizontal wins if `|dx| > |dy|`; left=complete, right=defer, up=trash (confirm modal), down=priority+1
+- `SWIPE_THRESHOLD = 80px` — スワイプとして認識する最小ドラッグ量
+- `< 8px` のドラッグはタップとして扱い → 編集モーダルを開く
+- `|dx| > |dy|` なら水平方向優先
 
-### Undo
-History is a client-side stack of `{ todos, done, trash }` snapshots. Undo restores the previous snapshot but does **not** reverse the Asana API call — the API calls are fire-and-forget.
+| 方向 | アクション | 色 |
+|------|---------|-----|
+| 左 | 完了 | `#4ade80`（緑） |
+| 右 | 後回し（デッキの末尾へ移動） | `#a78bfa`（紫） |
+| 上 | 削除確認モーダル表示 | `#f87171`（赤） |
+| 下 | 優先度+1 | `#fbbf24`（黄） |
 
-### Trash
-Trash is client-side only. Deleting a task calls `DELETE /api/todos/:id` immediately (removes from Asana). The trash tab shows locally held items that cannot be restored from Asana.
+カードは`drag.x * 0.08`ラジアンで回転し、方向に応じたカラーオーバーレイを表示する。
+
+---
+
+## Undo
+
+Undoはクライアントサイドのスタック管理。直前の`{ todos, done, trash }`スナップショットを復元するが、**Asana APIへの操作は元に戻らない**（APIコールはfire-and-forget）。
+
+---
+
+## Trash（ゴミ箱）
+
+ゴミ箱はクライアントサイドのみで管理。タスク削除時に`DELETE /api/todos/:id`が即座に呼ばれ（Asanaから削除）、ローカルの`trash`配列に保持される。ゴミ箱内のタスクはAsanaに存在しないため、**復元はローカル状態への復元のみ**で、Asanaには反映されない。
+
+---
+
+## Asana Integration Status
+
+`ASANA_INTEGRATION.md`に、`App.jsx`と`api.ts`を接続するための12ステップのパッチ手順が記載されている。統合が未完了の場合はこのファイルを参照すること。
+
+**統合の主要ポイント:**
+1. `App.jsx`の先頭に`import { fetchTodos, ... } from "./api"` を追加
+2. `useState(INITIAL_TODOS)` → `useState([])` に変更し、`loading` stateを追加
+3. `useEffect`内でAsanaからタスクを取得して`todos`/`done`に振り分け
+4. 各操作（スワイプ、スヌーズ、追加、編集）でAPIを呼び出す
+5. ローディング表示を追加
+
+---
+
+## Design Conventions
+
+- **フォント:** Syne（見出し）、DM Sans（本文）、DM Mono（ラベル・コード）
+- **カラーパレット:** ダークテーマ（背景 `#1C1C2E`）、グラスモーフィズムエフェクト
+- **最大幅:** 480px（モバイルファースト）
+- **スタイリング:** CSSフレームワーク不使用。全てインラインCSS
+- **アニメーション:** CSSトランジション（`transition: all 0.2s`）を積極的に使用
+
+---
+
+## Dev Container
+
+`.devcontainer/devcontainer.json`で設定済み:
+- イメージ: Node 22 (Bookworm)
+- フォワードポート: `5173`（Vite）、`8787`（Wrangler）
+- VSCode拡張: ESLint、Prettier、Cloudflare Workers Bindings
+- post-createコマンド: `frontend`と`worker`両方で`npm install`
+
+---
+
+## Key Conventions for AI Assistants
+
+- **新しいDBは作らない**: データ永続化はAsanaのみ。D1/KVなど追加しない
+- **単一ファイル原則**: `App.jsx`と`worker/src/index.ts`はそれぞれ単一ファイルで完結している。不必要に分割しない
+- **インラインCSS**: スタイルはCSSファイルやTailwindではなくインラインオブジェクトで記述する
+- **fire-and-forget API**: UIはローカル状態を即時更新し、APIはバックグラウンドで呼ぶ（Undoはローカルのみ）
+- **PATCH前のフェッチ**: `updateTodo`は現在値取得→マージ→保存の順序を守る（`worker/src/index.ts`のPATCHルート参照）
+- **型安全**: `api.ts`の`Todo`型を変更する場合は`worker/src/index.ts`の`toTodo()`も合わせて更新する
