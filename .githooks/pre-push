@@ -1,0 +1,52 @@
+#!/bin/sh
+# pre-push hook — push 前にすべてのテストを実行する
+# git config core.hooksPath .githooks で有効化
+
+set -e
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+CYAN='\033[0;36m'
+RESET='\033[0m'
+
+ROOT="$(git rev-parse --show-toplevel)"
+
+pass() { printf "${GREEN}✓ $1${RESET}\n"; }
+fail() { printf "${RED}✗ $1${RESET}\n"; }
+step() { printf "\n${CYAN}▶ $1${RESET}\n"; }
+
+printf "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}\n"
+printf "${YELLOW}  Pre-push: running all tests...${RESET}\n"
+printf "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}\n"
+
+# ── 1. Worker ユニットテスト ──────────────────────────────
+step "Worker unit tests (Vitest)"
+if npm --prefix "$ROOT/worker" run test:run --silent; then
+  pass "Worker unit tests"
+else
+  fail "Worker unit tests failed"
+  exit 1
+fi
+
+# ── 2. Frontend ユニットテスト ────────────────────────────
+step "Frontend unit tests (Vitest)"
+if npm --prefix "$ROOT/frontend" run test:run --silent; then
+  pass "Frontend unit tests"
+else
+  fail "Frontend unit tests failed"
+  exit 1
+fi
+
+# ── 3. Frontend E2E テスト ────────────────────────────────
+step "Frontend E2E tests (Playwright)"
+if npm --prefix "$ROOT/frontend" run test:e2e -- --reporter=line; then
+  pass "E2E tests"
+else
+  fail "E2E tests failed"
+  exit 1
+fi
+
+printf "\n${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}\n"
+printf "${GREEN}  All tests passed! Pushing...${RESET}\n"
+printf "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}\n\n"

@@ -3,5 +3,12 @@ main = "src/index.ts"
 compatibility_date = "2024-01-01"
 
 [vars]
-# 本番は wrangler secret put ASANA_TOKEN で設定
 ASANA_PROJECT_ID = "1202804017257914"
+GOOGLE_CLIENT_ID = ""     # Google Cloud Console で取得した OAuth クライアント ID
+ALLOWED_EMAIL    = ""     # 許可するメールアドレス（カンマ区切り）例: "you@gmail.com"
+FRONTEND_URL     = "http://localhost:5173"  # 本番は Cloudflare Pages の URL に更新
+
+# 以下はシークレットとして設定すること:
+#   wrangler secret put ASANA_TOKEN
+#   wrangler secret put GOOGLE_CLIENT_SECRET
+#   wrangler secret put JWT_SECRET

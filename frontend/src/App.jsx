@@ -1,12 +1,18 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { todayStr, tomorrowStr, directionConfig } from "./utils.js";
+import { fetchMe, saveToken, clearToken } from "./api.ts";
 import TodoCard from "./components/TodoCard.jsx";
 import ActionButton from "./components/ActionButton.jsx";
 import BulkAddModal from "./components/BulkAddModal.jsx";
 import EditModal from "./components/EditModal.jsx";
 import DeleteConfirmModal from "./components/DeleteConfirmModal.jsx";
 import ListView from "./components/ListView.jsx";
+import LoginScreen from "./components/LoginScreen.jsx";
 import styles from "./App.module.css";
+
+// VITE_API_URL が設定されていて VITE_SKIP_AUTH が未設定のとき認証が必要
+const AUTH_REQUIRED =
+  !!import.meta.env.VITE_API_URL && import.meta.env.VITE_SKIP_AUTH !== "true";
 
 const INITIAL_TODOS = [
   { id: 1, title: "デザインレビュー", memo: "Figmaのモックアップを確認してフィードバックを送る", priority: 0, dueDate: todayStr(), snoozedUntil: null },
@@ -17,6 +23,9 @@ const INITIAL_TODOS = [
 ];
 
 export default function App() {
+  const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(AUTH_REQUIRED);
+
   const [todos, setTodos] = useState(INITIAL_TODOS);
   const [done, setDone] = useState([]);
   const [trash, setTrash] = useState([]);
@@ -30,6 +39,22 @@ export default function App() {
   const [screen, setScreen] = useState("main");
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [editingTodo, setEditingTodo] = useState(null);
+
+  useEffect(() => {
+    if (!AUTH_REQUIRED) return;
+    // OAuth コールバック後の ?token= パラメータを処理
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("token");
+    if (token) {
+      saveToken(token);
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+    // トークンを検証してユーザー情報を取得
+    fetchMe().then((u) => {
+      setUser(u);
+      setAuthLoading(false);
+    });
+  }, []);
 
   const visibleTodos = todos.filter(t => !t.snoozedUntil || t.snoozedUntil <= todayStr());
   const snoozedCount = todos.filter(t => t.snoozedUntil && t.snoozedUntil > todayStr()).length;
@@ -139,6 +164,16 @@ export default function App() {
     else { setTrash(tr => tr.filter(x => x.id !== id)); showToast("完全に削除しました", "#f87171"); }
   }
 
+  // 認証チェック中
+  if (authLoading) {
+    return <div className={styles.authLoading} />;
+  }
+
+  // 未ログイン
+  if (AUTH_REQUIRED && !user) {
+    return <LoginScreen />;
+  }
+
   const Toast = toast && (
     <div className={styles.toast} style={{ "--toast-color": toast.color }}>
       {toast.msg}
@@ -180,6 +215,15 @@ export default function App() {
           <h1 className={styles.headerTitle}>Todo</h1>
         </div>
         <div className={styles.headerActions}>
+          {user && (
+            <button
+              className={styles.btnUser}
+              onClick={() => { clearToken(); setUser(null); }}
+              title={`${user.name} (${user.email}) — クリックでログアウト`}
+            >
+              <img src={user.picture} alt={user.name} className={styles.userAvatar} referrerPolicy="no-referrer" />
+            </button>
+          )}
           <button className={styles.btnIcon} onClick={() => setScreen("list")}>
             ☰
             {notifCount > 0 && (

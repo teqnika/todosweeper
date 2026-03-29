@@ -1,12 +1,30 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { createHmac } from "node:crypto";
 import app from "./index";
+
+const TEST_JWT_SECRET = "test-secret-for-unit-tests";
 
 const ENV = {
   ASANA_TOKEN: "fake-token",
   ASANA_PROJECT_ID: "fake-project-id",
+  GOOGLE_CLIENT_ID: "fake-client-id",
+  GOOGLE_CLIENT_SECRET: "fake-client-secret",
+  JWT_SECRET: TEST_JWT_SECRET,
+  ALLOWED_EMAIL: "test@example.com",
+  FRONTEND_URL: "http://localhost:5173",
 };
 
 // ── ヘルパー ──────────────────────────────────────────────
+
+/** テスト用 JWT トークンを Node crypto で生成（Web Crypto と HMAC-SHA256 互換）*/
+function createTestToken(secret = TEST_JWT_SECRET): string {
+  const header = Buffer.from(JSON.stringify({ alg: "HS256", typ: "JWT" })).toString("base64url");
+  const payload = Buffer.from(
+    JSON.stringify({ email: "test@example.com", name: "Test", picture: "", exp: Math.floor(Date.now() / 1000) + 3600 })
+  ).toString("base64url");
+  const sig = createHmac("sha256", secret).update(`${header}.${payload}`).digest("base64url");
+  return `${header}.${payload}.${sig}`;
+}
 
 function asanaTask(overrides: Record<string, unknown> = {}) {
   return {
@@ -28,8 +46,21 @@ function mockFetch(data: unknown, status = 200) {
   });
 }
 
+/** 認証ヘッダー付きリクエスト */
 function req(path: string, init?: RequestInit) {
-  return app.request(path, init, ENV);
+  const token = createTestToken();
+  return app.request(
+    path,
+    {
+      ...init,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+        ...(init?.headers as Record<string, string> ?? {}),
+      },
+    },
+    ENV
+  );
 }
 
 beforeEach(() => {
@@ -109,6 +140,20 @@ describe("GET /api/todos", () => {
     const todos = await res.json();
     expect(todos).toEqual([]);
   });
+
+  it("認証ヘッダーなしは 401 を返す", async () => {
+    const res = await app.request("/api/todos", {}, ENV);
+    expect(res.status).toBe(401);
+  });
+
+  it("無効なトークンは 401 を返す", async () => {
+    const res = await app.request(
+      "/api/todos",
+      { headers: { Authorization: "Bearer invalid.token.here" } },
+      ENV
+    );
+    expect(res.status).toBe(401);
+  });
 });
 
 // ── POST /api/todos ───────────────────────────────────────
@@ -117,7 +162,6 @@ describe("POST /api/todos", () => {
     vi.stubGlobal("fetch", mockFetch({ data: asanaTask({ name: "新タスク" }) }));
     const res = await req("/api/todos", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title: "新タスク", memo: "メモ" }),
     });
     expect(res.status).toBe(201);
@@ -140,7 +184,6 @@ describe("POST /api/todos", () => {
     );
     await req("/api/todos", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title: "T", memo: "メモ本文", priority: 2 }),
     });
     expect(capturedNotes).toContain("メモ本文");
@@ -162,7 +205,6 @@ describe("POST /api/todos", () => {
     );
     await req("/api/todos", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title: "T" }),
     });
     expect(capturedNotes).toContain("priority:0");
@@ -180,7 +222,6 @@ describe("POST /api/todos/bulk", () => {
     );
     const res = await req("/api/todos/bulk", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ titles: ["タスクA", "タスクB"] }),
     });
     expect(res.status).toBe(201);
@@ -206,7 +247,6 @@ describe("PATCH /api/todos/:id", () => {
 
     const res = await req("/api/todos/123", {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ memo: "新メモ" }),
     });
     expect(res.status).toBe(200);
@@ -233,7 +273,6 @@ describe("PATCH /api/todos/:id", () => {
     );
     await req("/api/todos/123", {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ memo: "新メモ" }),
     });
     expect(capturedNotes).toContain("新メモ");
@@ -263,7 +302,6 @@ describe("PATCH /api/todos/:id", () => {
     );
     await req("/api/todos/123", {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ snoozedUntil: null }),
     });
     expect(capturedNotes).not.toContain("snoozedUntil");
@@ -276,7 +314,6 @@ describe("PATCH /api/todos/:id/complete", () => {
     vi.stubGlobal("fetch", mockFetch({ data: asanaTask({ completed: true }) }));
     const res = await req("/api/todos/123/complete", {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ completed: true }),
     });
     expect(res.status).toBe(200);
@@ -288,7 +325,6 @@ describe("PATCH /api/todos/:id/complete", () => {
     vi.stubGlobal("fetch", mockFetch({ data: asanaTask({ completed: false }) }));
     const res = await req("/api/todos/123/complete", {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ completed: false }),
     });
     const todo = await res.json();
@@ -309,9 +345,14 @@ describe("DELETE /api/todos/:id", () => {
 
 // ── CORS ──────────────────────────────────────────────────
 describe("CORS", () => {
-  it("全ルートに Access-Control-Allow-Origin ヘッダーが付く", async () => {
+  it("Origin ヘッダーを反映した Access-Control-Allow-Origin を返す", async () => {
     vi.stubGlobal("fetch", mockFetch({ data: [] }));
-    const res = await req("/api/todos");
-    expect(res.headers.get("access-control-allow-origin")).toBe("*");
+    const token = createTestToken();
+    const res = await app.request(
+      "/api/todos",
+      { headers: { Origin: "http://localhost:5173", Authorization: `Bearer ${token}` } },
+      ENV
+    );
+    expect(res.headers.get("access-control-allow-origin")).toBe("http://localhost:5173");
   });
 });
