@@ -1,0 +1,57 @@
+name: Test
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+jobs:
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            frontend/package-lock.json
+            worker/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          npm ci --prefix frontend
+          npm ci --prefix worker
+
+      - name: Worker unit tests
+        run: npm --prefix worker run test:run
+
+      - name: Frontend unit tests
+        run: npm --prefix frontend run test:run
+
+  e2e-tests:
+    name: E2E Tests (Playwright)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci --prefix frontend
+
+      - name: Install Playwright browsers
+        run: npm --prefix frontend run playwright:install
+
+      - name: Run E2E tests
+        run: npm --prefix frontend run test:e2e
+        env:
+          CI: true
+          VITE_SKIP_AUTH: "true"
