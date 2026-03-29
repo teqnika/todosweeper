@@ -56,9 +56,13 @@ todosweeper/
 
 ### Frontend (`cd frontend`)
 ```bash
-npm run dev      # Vite dev server (デフォルトポート 5173)
-npm run build    # TypeScriptコンパイル + Viteバンドル → dist/
-npm run deploy   # build + wrangler pages deploy dist
+npm run dev          # Vite dev server (デフォルトポート 5173)
+npm run build        # TypeScriptコンパイル + Viteバンドル → dist/
+npm run deploy       # build + wrangler pages deploy dist
+npm run test         # Vitest ユニットテスト（ウォッチモード）
+npm run test:run     # Vitest ユニットテスト（一回実行）
+npm run test:e2e     # Playwright E2Eテスト
+npm run coverage     # カバレッジレポート
 ```
 
 ### Worker (`cd worker`)
@@ -90,7 +94,7 @@ wrangler secret put ASANA_TOKEN
 | フロントエンド | React 18 + TypeScript + Vite |
 | API | Hono 4 on Cloudflare Workers |
 | データベース | Asana（永続化レイヤーとして使用） |
-| スタイリング | インラインCSS（CSSフレームワーク不使用） |
+| スタイリング | CSSモジュール（`*.module.css`）、CSS変数で動的スタイル |
 | 認証 | Asana Bearer トークン |
 | デプロイ | Cloudflare Pages + Wrangler CLI |
 
@@ -233,6 +237,31 @@ Undoはクライアントサイドのスタック管理。直前の`{ todos, don
 - **動的スタイル:** CSSカスタムプロパティ（CSS変数）を使用。`color-mix()`で派生色を生成
 - **ホバー効果:** CSSの`:hover`疑似クラスで実装。JSによるスタイル変更は不使用
 - **アニメーション:** CSSトランジション（`transition: all 0.2s`）を積極的に使用
+
+---
+
+## Testing
+
+### ユニットテスト（Vitest）
+- `frontend/src/**/*.test.{js,jsx,ts,tsx}` — コンポーネント・ユーティリティのユニットテスト
+- `worker/src/**/*.test.ts` — Worker APIのユニットテスト（Honoの`app.request()`を使用）
+- セットアップ: `frontend/src/test/setup.ts`（`@testing-library/jest-dom`をimport）
+- **重要**: `vi.useFakeTimers()`使用中は`userEvent`の代わりに`fireEvent`を使うこと（タイムアウト回避）
+
+### E2Eテスト（Playwright）
+- テストファイル: `frontend/e2e/*.spec.ts`
+- 設定: `frontend/playwright.config.ts`
+- ブラウザ: Chromium（`~/.cache/ms-playwright/chromium-1194/`を使用）
+- WebServerオプションでViteを自動起動（ポート 5173）
+- **フォント対策**: `e2e/base.ts`でGoogle Fontsへのリクエストをブロック（`load`イベントのタイムアウト防止）
+- **root実行時**: `launchOptions: { args: ["--no-sandbox"] }`が必要
+
+| ファイル | 内容 |
+|---------|------|
+| `e2e/stack.spec.ts` | スタック画面の初期表示（8テスト） |
+| `e2e/actions.spec.ts` | アクションボタン（完了・後回し・削除・優先度・スヌーズ）（10テスト） |
+| `e2e/add.spec.ts` | タスク追加・一括追加モーダル（10テスト） |
+| `e2e/list-view.spec.ts` | 一覧画面（ナビゲーション・フィルター・タスク操作・編集）（14テスト） |
 
 ---
 

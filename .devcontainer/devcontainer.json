@@ -6,7 +6,7 @@
     "ghcr.io/devcontainers/features/github-cli:1": {}
   },
 
-  "postCreateCommand": "npm install --prefix frontend && npm install --prefix worker",
+  "postCreateCommand": "npm install --prefix frontend && npm install --prefix worker && npm --prefix frontend run playwright:install",
 
   "forwardPorts": [5173, 8787],
   "portsAttributes": {
