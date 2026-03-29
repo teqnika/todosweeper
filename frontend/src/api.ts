@@ -13,20 +13,63 @@ export type Todo = {
   snoozedUntil: string | null;
 };
 
+export type User = {
+  email: string;
+  name: string;
+  picture: string;
+};
+
+// ── 認証トークン管理 ──────────────────────────────────────
+
+export function getToken(): string | null {
+  return localStorage.getItem("auth_token");
+}
+
+export function saveToken(token: string): void {
+  localStorage.setItem("auth_token", token);
+}
+
+export function clearToken(): void {
+  localStorage.removeItem("auth_token");
+}
+
+function authHeaders(): Record<string, string> {
+  const token = getToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+// ── fetch ラッパー ────────────────────────────────────────
+
 async function req<T>(path: string, options: RequestInit = {}): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
-    headers: { "Content-Type": "application/json" },
     ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...authHeaders(),
+      ...(options.headers as Record<string, string> ?? {}),
+    },
   });
   if (!res.ok) throw new Error(`API error: ${res.status}`);
   return res.json();
 }
 
-// タスク一覧取得
+// ── 認証 API ─────────────────────────────────────────────
+
+export async function fetchMe(): Promise<User | null> {
+  if (!getToken()) return null;
+  try {
+    const data = await req<{ user: User | null }>("/auth/me");
+    return data.user;
+  } catch {
+    return null;
+  }
+}
+
+// ── タスク API ────────────────────────────────────────────
+
 export const fetchTodos = (): Promise<Todo[]> =>
   req("/api/todos");
 
-// タスク作成
 export const createTodo = (data: {
   title: string;
   memo?: string;
@@ -35,24 +78,20 @@ export const createTodo = (data: {
 }): Promise<Todo> =>
   req("/api/todos", { method: "POST", body: JSON.stringify(data) });
 
-// 一括タスク作成
 export const bulkCreateTodos = (titles: string[]): Promise<Todo[]> =>
   req("/api/todos/bulk", { method: "POST", body: JSON.stringify({ titles }) });
 
-// タスク更新（メモ・期限・優先度・スヌーズ）
 export const updateTodo = (
   id: string,
   data: Partial<Pick<Todo, "memo" | "dueDate" | "priority" | "snoozedUntil">>
 ): Promise<Todo> =>
   req(`/api/todos/${id}`, { method: "PATCH", body: JSON.stringify(data) });
 
-// 完了・未完了切り替え
 export const completeTodo = (id: string, completed: boolean): Promise<Todo> =>
   req(`/api/todos/${id}/complete`, {
     method: "PATCH",
     body: JSON.stringify({ completed }),
   });
 
-// タスク削除（ゴミ箱へ = Asana 上は delete）
 export const deleteTodo = (id: string): Promise<{ ok: boolean }> =>
   req(`/api/todos/${id}`, { method: "DELETE" });
