@@ -1,0 +1,426 @@
+.app {
+  min-height: 100vh;
+  background: linear-gradient(160deg, #1c1c2e 0%, #18182a 60%, #1c1a2e 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: "DM Sans", sans-serif;
+  position: relative;
+  overflow: hidden;
+}
+
+.bgGlow {
+  position: fixed;
+  top: 20%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* Toast */
+.toast {
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #28283e;
+  padding: 10px 24px;
+  border-radius: 40px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: "DM Mono", monospace;
+  z-index: 100;
+  letter-spacing: 0.5px;
+  animation: fadeIn 0.2s ease;
+  /* border and color set via CSS vars */
+  border: 1px solid color-mix(in srgb, var(--toast-color) 27%, transparent);
+  color: var(--toast-color);
+}
+
+/* Header */
+.header {
+  width: 100%;
+  max-width: 480px;
+  padding: 24px 24px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.headerLabel {
+  font-size: 11px;
+  letter-spacing: 4px;
+  color: rgba(255, 255, 255, 0.25);
+  font-family: "DM Mono", monospace;
+  text-transform: uppercase;
+}
+
+.headerTitle {
+  font-size: 28px;
+  font-weight: 800;
+  color: #f1f0ff;
+  margin: 0;
+  font-family: "Syne", sans-serif;
+  letter-spacing: -1px;
+}
+
+.headerActions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.btnIcon {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  padding: 8px 13px;
+  color: rgba(255, 255, 255, 0.55);
+  cursor: pointer;
+  font-size: 13px;
+  font-family: "DM Mono", monospace;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.btnIcon:hover {
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+}
+
+.btnUndo {
+  background: rgba(255, 255, 255, 0.11);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 8px 14px;
+  font-size: 14px;
+  font-family: "DM Mono", monospace;
+  transition: opacity 0.2s;
+}
+
+.btnUndoEnabled {
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+}
+
+.btnUndoDisabled {
+  color: rgba(255, 255, 255, 0.15);
+  cursor: default;
+}
+
+.btnBulk {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  padding: 8px 13px;
+  color: rgba(255, 255, 255, 0.55);
+  cursor: pointer;
+  font-size: 13px;
+  font-family: "DM Mono", monospace;
+  letter-spacing: 0.5px;
+  transition: all 0.2s;
+}
+
+.btnBulk:hover {
+  background: rgba(124, 58, 237, 0.2);
+  color: #c4b5fd;
+}
+
+.btnAdd {
+  background: linear-gradient(135deg, #7c3aed, #6d28d9);
+  border: none;
+  border-radius: 12px;
+  padding: 8px 18px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: 0 4px 16px rgba(124, 58, 237, 0.4);
+  transition: transform 0.2s;
+}
+
+.btnAdd:hover {
+  transform: scale(1.05);
+}
+
+.notifBadge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  border-radius: 50%;
+  width: 14px;
+  height: 14px;
+  font-size: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 700;
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin-top: 20px;
+  background: rgba(255, 255, 255, 0.11);
+  border-radius: 12px;
+  padding: 4px;
+}
+
+.tabBtn {
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 20px;
+  color: rgba(255, 255, 255, 0.35);
+  cursor: pointer;
+  font-size: 13px;
+  font-family: "DM Mono", monospace;
+  transition: all 0.2s;
+}
+
+.tabBtnActive {
+  background: rgba(124, 58, 237, 0.6);
+  color: #fff;
+  font-weight: 700;
+}
+
+/* Card stack */
+.cardStack {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  height: 320px;
+  margin: 20px 0 14px;
+  padding: 0 24px;
+}
+
+.emptyStack {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.2);
+  font-family: "DM Mono", monospace;
+  gap: 8px;
+}
+
+.emptyStackEmoji {
+  font-size: 40px;
+}
+
+.emptyStackLabel {
+  font-size: 14px;
+  letter-spacing: 2px;
+}
+
+.emptyStackSnoozed {
+  font-size: 12px;
+  color: rgba(96, 165, 250, 0.53);
+}
+
+.actionButtons {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  padding: 0 24px;
+  flex-wrap: wrap;
+}
+
+.snoozeBtn {
+  margin-top: 14px;
+  background: rgba(96, 165, 250, 0.08);
+  border: 1px solid rgba(96, 165, 250, 0.2);
+  border-radius: 14px;
+  padding: 10px 28px;
+  color: #60a5fa;
+  cursor: pointer;
+  font-size: 13px;
+  font-family: "DM Mono", monospace;
+  letter-spacing: 0.5px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.snoozeBtn:hover {
+  background: rgba(96, 165, 250, 0.18);
+  transform: scale(1.03);
+}
+
+.swipeHints {
+  margin-top: 16px;
+  display: flex;
+  gap: 16px;
+  font-size: 11px;
+  font-family: "DM Mono", monospace;
+  letter-spacing: 1px;
+  flex-wrap: wrap;
+  justify-content: center;
+  padding: 0 24px;
+}
+
+/* Done tab list */
+.doneList {
+  width: 100%;
+  max-width: 480px;
+  padding: 16px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  max-height: 60vh;
+}
+
+.doneEmpty {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.2);
+  font-family: "DM Mono", monospace;
+  font-size: 13px;
+  margin-top: 40px;
+  letter-spacing: 2px;
+}
+
+.doneRow {
+  background: rgba(74, 222, 128, 0.06);
+  border: 1px solid rgba(74, 222, 128, 0.15);
+  border-radius: 16px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.doneRowLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.doneCheck {
+  color: #4ade80;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.doneTitleWrap {
+  min-width: 0;
+}
+
+.doneTitle {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 14px;
+  font-family: "Syne", sans-serif;
+  font-weight: 700;
+  text-decoration: line-through;
+}
+
+.doneMemo {
+  color: rgba(255, 255, 255, 0.25);
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+.btnUncomplete {
+  background: rgba(167, 139, 250, 0.1);
+  border: 1px solid rgba(167, 139, 250, 0.25);
+  border-radius: 10px;
+  padding: 6px 12px;
+  color: #a78bfa;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: "DM Mono", monospace;
+  flex-shrink: 0;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+
+.btnUncomplete:hover {
+  background: rgba(167, 139, 250, 0.22);
+}
+
+/* Single add modal */
+.addOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 50;
+  backdrop-filter: blur(4px);
+}
+
+.addSheet {
+  background: #28283e;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 24px 24px 0 0;
+  padding: 32px;
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.addTitle {
+  margin: 0;
+  color: #f1f0ff;
+  font-family: "Syne", sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.textInput {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  padding: 14px 16px;
+  color: #f1f0ff;
+  font-family: "DM Sans", sans-serif;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+  font-size: 16px;
+  transition: border-color 0.2s;
+}
+
+.textInput:focus {
+  border-color: rgba(124, 58, 237, 0.5);
+}
+
+.textareaInput {
+  composes: textInput;
+  font-size: 14px;
+  resize: none;
+}
+
+.btnSubmit {
+  background: linear-gradient(135deg, #7c3aed, #6d28d9);
+  border: none;
+  border-radius: 14px;
+  padding: 16px;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: "Syne", sans-serif;
+  box-shadow: 0 4px 20px rgba(124, 58, 237, 0.4);
+  transition: opacity 0.2s;
+}
+
+.btnSubmit:hover {
+  opacity: 0.9;
+}

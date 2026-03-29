@@ -1,0 +1,128 @@
+.wrapper {
+  position: absolute;
+  width: 100%;
+  max-width: 380px;
+  left: 50%;
+  top: 50%;
+  user-select: none;
+  touch-action: none;
+}
+
+.wrapperTop {
+  z-index: 10;
+  opacity: 1;
+}
+
+.wrapperBack {
+  z-index: 5;
+  opacity: 0.6;
+}
+
+.card {
+  background: linear-gradient(145deg, #28283e 0%, #222236 100%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 24px;
+  padding: 32px 32px 28px;
+  box-shadow: 0 32px 64px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.11);
+  min-height: 240px;
+  position: relative;
+  overflow: hidden;
+}
+
+.directionOverlay {
+  position: absolute;
+  inset: 0;
+  border-radius: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.1s;
+  z-index: 1;
+  background: var(--overlay-bg);
+}
+
+.directionLabel {
+  border: 3px solid var(--overlay-color);
+  border-radius: 12px;
+  padding: 8px 24px;
+  color: var(--overlay-color);
+  font-size: 26px;
+  font-family: "DM Mono", monospace;
+  font-weight: 700;
+  letter-spacing: 2px;
+  transform: rotate(-12deg);
+}
+
+.priorityBadge {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #1a1a2e;
+  letter-spacing: 1px;
+  font-family: "DM Mono", monospace;
+}
+
+.glow {
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.12) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.content {
+  position: relative;
+  z-index: 2;
+}
+
+.tag {
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: rgba(255, 255, 255, 0.25);
+  font-family: "DM Mono", monospace;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 800;
+  color: #f1f0ff;
+  margin: 0 0 12px;
+  font-family: "Syne", sans-serif;
+  line-height: 1.2;
+  letter-spacing: -0.5px;
+}
+
+.memo {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.4);
+  margin: 0 0 16px;
+  line-height: 1.7;
+  font-family: "DM Sans", sans-serif;
+}
+
+.dueBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 20px;
+  padding: 4px 12px;
+  background: color-mix(in srgb, var(--due-color) 9%, transparent);
+  border: 1px solid color-mix(in srgb, var(--due-color) 27%, transparent);
+}
+
+.dueLabel {
+  font-size: 11px;
+  color: var(--due-color);
+  font-family: "DM Mono", monospace;
+  font-weight: 700;
+}
