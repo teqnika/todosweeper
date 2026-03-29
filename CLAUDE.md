@@ -20,12 +20,28 @@ todosweeper/
 ├── .devcontainer/
 │   └── devcontainer.json        # Node 22 (Bookworm) dev container
 ├── frontend/
+│   ├── index.html               # Vite エントリHTML
+│   ├── vite.config.ts           # Vite設定（CSSモジュール camelCase有効）
+│   ├── tsconfig.json            # TypeScript設定（React/Vite向け）
+│   ├── tsconfig.node.json       # vite.config.ts用TypeScript設定
 │   ├── package.json             # React, Vite, TypeScript, wrangler
 │   └── src/
-│       ├── App.jsx              # メインReactアプリ（全UI・状態管理）
-│       └── api.ts               # 型付きAPIクライアント
+│       ├── main.jsx             # Reactエントリポイント（globals.cssをここでimport）
+│       ├── globals.css          # グローバルスタイル（@keyframes, box-sizing, フォント）
+│       ├── utils.js             # 共有ユーティリティ（todayStr, formatDate, directionConfig等）
+│       ├── api.ts               # 型付きAPIクライアント
+│       ├── App.jsx              # メインReactアプリ（state・ハンドラのみ）
+│       ├── App.module.css       # メイン画面スタイル
+│       └── components/
+│           ├── ActionButton.jsx / .module.css
+│           ├── BulkAddModal.jsx / .module.css
+│           ├── DeleteConfirmModal.jsx / .module.css
+│           ├── EditModal.jsx / .module.css
+│           ├── ListView.jsx / .module.css
+│           └── TodoCard.jsx / .module.css
 ├── worker/
 │   ├── package.json             # Hono, @cloudflare/workers-types, wrangler
+│   ├── tsconfig.json            # TypeScript設定（Cloudflare Workers向け）
 │   ├── wrangler.toml            # Worker設定・ASANA_PROJECT_ID
 │   └── src/
 │       └── index.ts             # Hono APIサーバー（単一ファイル）
@@ -129,8 +145,17 @@ type Todo = {
 - `toNotes(memo, priority, snoozedUntil)` — アプリ形式 → Asana notes文字列に変換
 - **PATCHは必ず現在のタスクを先にフェッチしてフィールドをマージする**（部分更新のため）
 
+### `frontend/src/utils.js`
+共有ユーティリティ。`App.jsx`・各コンポーネント双方からimport。
+
+- `todayStr()` / `tomorrowStr()` — `YYYY-MM-DD`形式の日付文字列
+- `formatDate(str)` — 期限日を`{ label, color }`に変換
+- `SWIPE_THRESHOLD` — スワイプ判定閾値（80px）
+- `directionConfig` — 方向ごとのラベル・カラー定義
+- `getDirection(dx, dy)` — ドラッグ量から方向を計算
+
 ### `frontend/src/App.jsx`
-単一ファイルのReactアプリ。全UI状態をここで管理。インラインCSSで自己完結。
+状態管理とイベントハンドラのみを担う。UIはすべてコンポーネントに委譲。
 
 **主要な状態:**
 | state | 説明 |
@@ -141,13 +166,19 @@ type Todo = {
 | `history` | Undo用スナップショットスタック `{ todos, done, trash }[]` |
 | `loading` | Asanaからのデータ取得中フラグ |
 
-**主要なコンポーネント:**
-- `DeleteConfirmModal` — タスク削除確認ダイアログ
-- `TodoCard` — ドラッグ可能なカードコンポーネント（ポインターイベント処理）
+**コンポーネント構成（`src/components/`）:**
 - `ActionButton` — 汎用アクションボタン
 - `BulkAddModal` — 一括タスク作成モーダル
+- `DeleteConfirmModal` — タスク削除確認ダイアログ
 - `EditModal` — タスクのメモ・期限日編集モーダル
 - `ListView` — タスク一覧（All/Active/Done/Trash フィルター付き）
+- `TodoCard` — ドラッグ可能なカードコンポーネント（ポインターイベント処理）
+
+**スタイリング:**
+- 各コンポーネントは同名の`.module.css`を持つ（例: `TodoCard.module.css`）
+- 動的な色値はCSSカスタムプロパティ（`--color`、`--due-color`、`--toast-color`）で渡す
+- ドラッグ座標・回転角度など純粋に動的な値のみ`style={{}}`を使用
+- ホバー効果はCSSの`:hover`疑似クラスで実装（`onMouseEnter`/`onMouseLeave`不使用）
 
 ---
 
@@ -198,7 +229,9 @@ Undoはクライアントサイドのスタック管理。直前の`{ todos, don
 - **フォント:** Syne（見出し）、DM Sans（本文）、DM Mono（ラベル・コード）
 - **カラーパレット:** ダークテーマ（背景 `#1C1C2E`）、グラスモーフィズムエフェクト
 - **最大幅:** 480px（モバイルファースト）
-- **スタイリング:** CSSフレームワーク不使用。全てインラインCSS
+- **スタイリング:** CSSモジュール（`*.module.css`）。CSSフレームワーク不使用
+- **動的スタイル:** CSSカスタムプロパティ（CSS変数）を使用。`color-mix()`で派生色を生成
+- **ホバー効果:** CSSの`:hover`疑似クラスで実装。JSによるスタイル変更は不使用
 - **アニメーション:** CSSトランジション（`transition: all 0.2s`）を積極的に使用
 
 ---
@@ -216,8 +249,11 @@ Undoはクライアントサイドのスタック管理。直前の`{ todos, don
 ## Key Conventions for AI Assistants
 
 - **新しいDBは作らない**: データ永続化はAsanaのみ。D1/KVなど追加しない
-- **単一ファイル原則**: `App.jsx`と`worker/src/index.ts`はそれぞれ単一ファイルで完結している。不必要に分割しない
-- **インラインCSS**: スタイルはCSSファイルやTailwindではなくインラインオブジェクトで記述する
+- **Worker単一ファイル原則**: `worker/src/index.ts`は単一ファイルで完結。不必要に分割しない
+- **CSSモジュール**: スタイルは`*.module.css`で記述。Tailwindやインラインスタイルは使わない
+- **動的色はCSS変数で**: コンポーネントの`style={{ "--foo": value }}`でCSS変数を渡し、CSSで`var(--foo)`を参照する
+- **ホバーはCSSで**: `onMouseEnter`/`onMouseLeave`によるインラインスタイル変更は行わない
+- **ユーティリティは`utils.js`に**: 日付関数・定数・スワイプ設定は`src/utils.js`から参照する
 - **fire-and-forget API**: UIはローカル状態を即時更新し、APIはバックグラウンドで呼ぶ（Undoはローカルのみ）
 - **PATCH前のフェッチ**: `updateTodo`は現在値取得→マージ→保存の順序を守る（`worker/src/index.ts`のPATCHルート参照）
 - **型安全**: `api.ts`の`Todo`型を変更する場合は`worker/src/index.ts`の`toTodo()`も合わせて更新する

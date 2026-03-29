@@ -10,8 +10,8 @@
 
   "forwardPorts": [5173, 8787],
   "portsAttributes": {
-    "5173": { "label": "Vite (frontend)" },
-    "8787": { "label": "Wrangler (worker)" }
+    "5173": { "label": "Vite (frontend)", "onAutoForward": "openBrowser" },
+    "8787": { "label": "Wrangler (worker)", "onAutoForward": "silent" }
   },
 
   "customizations": {
@@ -19,11 +19,15 @@
       "extensions": [
         "dbaeumer.vscode-eslint",
         "esbenp.prettier-vscode",
-        "cloudflare.cloudflare-workers-bindings"
+        "cloudflare.cloudflare-workers-bindings",
+        "clinyong.vscode-css-modules"
       ],
       "settings": {
         "editor.formatOnSave": true,
-        "editor.defaultFormatter": "esbenp.prettier-vscode"
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "typescript.tsdk": "frontend/node_modules/typescript/lib",
+        "css.validate": false,
+        "cssModules.camelCase": true
       }
     }
   },
