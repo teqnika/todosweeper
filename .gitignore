@@ -5,3 +5,5 @@ dist/
 .dev.vars
 .DS_Store
 .claude/settings.local.json
+frontend/test-results/
+frontend/playwright-report/

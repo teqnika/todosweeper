@@ -1,0 +1,282 @@
+.screen {
+  min-height: 100vh;
+  background: linear-gradient(160deg, #1c1c2e 0%, #18182a 60%, #1c1a2e 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: "DM Sans", sans-serif;
+}
+
+.topBar {
+  width: 100%;
+  max-width: 480px;
+  padding: 24px 24px 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.backBtn {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  padding: 8px 14px;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  font-size: 16px;
+  font-family: "DM Mono", monospace;
+  transition: background 0.2s;
+}
+
+.backBtn:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.headingLabel {
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: rgba(255, 255, 255, 0.25);
+  font-family: "DM Mono", monospace;
+  text-transform: uppercase;
+}
+
+.heading {
+  font-size: 24px;
+  font-weight: 800;
+  color: #f1f0ff;
+  margin: 0;
+  font-family: "Syne", sans-serif;
+  letter-spacing: -1px;
+}
+
+.filterTabs {
+  display: flex;
+  gap: 3px;
+  margin-top: 20px;
+  background: rgba(255, 255, 255, 0.11);
+  border-radius: 12px;
+  padding: 4px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.filterBtn {
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 14px;
+  color: rgba(255, 255, 255, 0.35);
+  cursor: pointer;
+  font-size: 12px;
+  font-family: "DM Mono", monospace;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.filterBtnActive {
+  background: rgba(124, 58, 237, 0.6);
+  color: #fff;
+  font-weight: 700;
+}
+
+.filterBtnTrashActive {
+  background: rgba(248, 113, 113, 0.4);
+  color: #fff;
+  font-weight: 700;
+}
+
+.emptyTrashBtn {
+  margin-top: 12px;
+  background: rgba(248, 113, 113, 0.08);
+  border: 1px solid rgba(248, 113, 113, 0.2);
+  border-radius: 12px;
+  padding: 8px 20px;
+  color: #f87171;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: "DM Mono", monospace;
+  transition: background 0.2s;
+}
+
+.emptyTrashBtn:hover {
+  background: rgba(248, 113, 113, 0.18);
+}
+
+.list {
+  width: 100%;
+  max-width: 480px;
+  padding: 16px 24px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+}
+
+.empty {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.2);
+  font-family: "DM Mono", monospace;
+  font-size: 13px;
+  margin-top: 48px;
+  letter-spacing: 2px;
+}
+
+/* Todo row */
+.row {
+  background: linear-gradient(145deg, #28283e, #222236);
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 18px;
+  padding: 16px 18px;
+}
+
+.rowDone {
+  background: rgba(74, 222, 128, 0.05);
+  border-color: rgba(74, 222, 128, 0.12);
+}
+
+.rowTrashed {
+  background: rgba(248, 113, 113, 0.04);
+  border-color: rgba(248, 113, 113, 0.12);
+}
+
+.rowInner {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.rowContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.rowTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: #f1f0ff;
+  font-family: "Syne", sans-serif;
+  line-height: 1.3;
+}
+
+.rowTitleDone {
+  color: rgba(255, 255, 255, 0.4);
+  text-decoration: line-through;
+}
+
+.rowTitleTrashed {
+  color: rgba(255, 255, 255, 0.3);
+  text-decoration: line-through;
+}
+
+.rowMemo {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.3);
+  margin-top: 4px;
+  line-height: 1.6;
+  font-family: "DM Sans", sans-serif;
+}
+
+.dueBadge {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 6px;
+  border-radius: 20px;
+  padding: 2px 10px;
+  background: color-mix(in srgb, var(--due-color) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--due-color) 20%, transparent);
+}
+
+.dueLabel {
+  font-size: 10px;
+  color: var(--due-color);
+  font-family: "DM Mono", monospace;
+  font-weight: 700;
+}
+
+.rowActions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* Row buttons */
+.btnRestore {
+  background: rgba(167, 139, 250, 0.1);
+  border: 1px solid rgba(167, 139, 250, 0.25);
+  border-radius: 10px;
+  padding: 6px 10px;
+  color: #a78bfa;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: "DM Mono", monospace;
+  transition: background 0.2s;
+}
+
+.btnRestore:hover {
+  background: rgba(167, 139, 250, 0.22);
+}
+
+.btnPermanentDelete {
+  background: rgba(248, 113, 113, 0.08);
+  border: 1px solid rgba(248, 113, 113, 0.15);
+  border-radius: 10px;
+  padding: 6px 10px;
+  color: #f87171;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: "DM Mono", monospace;
+  transition: background 0.2s;
+}
+
+.btnPermanentDelete:hover {
+  background: rgba(248, 113, 113, 0.2);
+}
+
+.btnEdit {
+  background: rgba(124, 58, 237, 0.12);
+  border: 1px solid rgba(124, 58, 237, 0.2);
+  border-radius: 10px;
+  padding: 6px 10px;
+  color: #a78bfa;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: "DM Mono", monospace;
+  transition: background 0.2s;
+}
+
+.btnEdit:hover {
+  background: rgba(124, 58, 237, 0.25);
+}
+
+.btnComplete {
+  background: rgba(74, 222, 128, 0.1);
+  border: 1px solid rgba(74, 222, 128, 0.2);
+  border-radius: 10px;
+  padding: 6px 10px;
+  color: #4ade80;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: "DM Mono", monospace;
+  transition: background 0.2s;
+}
+
+.btnComplete:hover {
+  background: rgba(74, 222, 128, 0.22);
+}
+
+.btnDelete {
+  background: rgba(248, 113, 113, 0.08);
+  border: 1px solid rgba(248, 113, 113, 0.15);
+  border-radius: 10px;
+  padding: 6px 10px;
+  color: #f87171;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: "DM Mono", monospace;
+  transition: background 0.2s;
+}
+
+.btnDelete:hover {
+  background: rgba(248, 113, 113, 0.2);
+}
