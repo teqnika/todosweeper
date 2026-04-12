@@ -1,0 +1,742 @@
+/* ── Root ── */
+.root {
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: #07070f;
+  color: #ddddf0;
+  display: flex;
+  flex-direction: column;
+  font-family: "DM Mono", monospace;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Scanline overlay for CRT feel */
+.scanlines {
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 3px,
+    rgba(0, 0, 0, 0.04) 3px,
+    rgba(0, 0, 0, 0.04) 4px
+  );
+  pointer-events: none;
+  z-index: 999;
+}
+
+/* ── Header ── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
+  background: rgba(0, 0, 0, 0.5);
+  border-bottom: 1px solid rgba(0, 255, 100, 0.08);
+  flex-shrink: 0;
+  gap: 16px;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.sysLabel {
+  font-size: 9px;
+  letter-spacing: 4px;
+  color: rgba(0, 255, 100, 0.35);
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.sysName {
+  font-size: 13px;
+  font-weight: 700;
+  color: #e0e0f0;
+  letter-spacing: 2px;
+  font-family: "Syne", sans-serif;
+  flex-shrink: 0;
+}
+
+.statusDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+  transition: all 0.3s;
+}
+
+.statusDot[data-mode="focus"] {
+  background: #4ade80;
+  box-shadow: 0 0 8px rgba(74, 222, 128, 0.9);
+  animation: blink 1.2s ease-in-out infinite;
+}
+
+.statusDot[data-mode="break"] {
+  background: #60a5fa;
+  box-shadow: 0 0 8px rgba(96, 165, 250, 0.9);
+  animation: blink 2s ease-in-out infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.sysStatus {
+  font-size: 9px;
+  letter-spacing: 3px;
+  color: rgba(0, 255, 100, 0.35);
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.headerBtn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  padding: 5px 11px;
+  color: rgba(255, 255, 255, 0.35);
+  cursor: pointer;
+  font-size: 10px;
+  font-family: "DM Mono", monospace;
+  letter-spacing: 1px;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.headerBtn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.09);
+  color: rgba(255, 255, 255, 0.7);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.headerBtn:disabled {
+  opacity: 0.2;
+  cursor: default;
+}
+
+.headerBtnPrimary {
+  background: rgba(124, 58, 237, 0.2);
+  border: 1px solid rgba(124, 58, 237, 0.35);
+  border-radius: 4px;
+  padding: 5px 13px;
+  color: #c4b5fd;
+  cursor: pointer;
+  font-size: 10px;
+  font-family: "DM Mono", monospace;
+  letter-spacing: 1px;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.headerBtnPrimary:hover {
+  background: rgba(124, 58, 237, 0.35);
+  border-color: rgba(167, 139, 250, 0.5);
+  color: #e9d5ff;
+}
+
+.btnUser {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  border-radius: 50%;
+  line-height: 0;
+  opacity: 0.6;
+  transition: opacity 0.15s;
+}
+.btnUser:hover { opacity: 1; }
+
+.userAvatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* ── Grid ── */
+.grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 260px 1fr 240px;
+  min-height: 0;
+  /* Hairline separators between columns */
+  background: rgba(0, 255, 100, 0.06);
+  gap: 1px;
+}
+
+/* ── Generic Panel ── */
+.panel {
+  background: #07070f;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.focusPanel {
+  background: #08080e;
+}
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  flex-shrink: 0;
+}
+
+.panelLabel {
+  font-size: 9px;
+  letter-spacing: 3px;
+  color: rgba(0, 255, 100, 0.35);
+  text-transform: uppercase;
+}
+
+.panelCount {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 2px 7px;
+  border-radius: 3px;
+}
+
+.divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.04);
+  flex-shrink: 0;
+}
+
+.emptyMsg {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.12);
+  font-size: 10px;
+  letter-spacing: 2px;
+  padding: 32px 20px;
+}
+
+/* ── Task Queue (left) ── */
+.queueList {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px;
+}
+
+.queueList::-webkit-scrollbar { width: 3px; }
+.queueList::-webkit-scrollbar-track { background: transparent; }
+.queueList::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.08); }
+
+.queueItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 9px 10px;
+  cursor: pointer;
+  text-align: left;
+  color: rgba(255, 255, 255, 0.4);
+  transition: all 0.12s;
+  font-family: inherit;
+  font-size: 12px;
+}
+
+.queueItem:hover {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.07);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.queueItemActive {
+  background: rgba(0, 255, 100, 0.04) !important;
+  border-color: rgba(0, 255, 100, 0.18) !important;
+  color: #e0e0f0 !important;
+}
+
+.queueIdx {
+  font-size: 9px;
+  color: rgba(0, 255, 100, 0.25);
+  min-width: 18px;
+  flex-shrink: 0;
+}
+
+.queueItemActive .queueIdx {
+  color: rgba(0, 255, 100, 0.6);
+}
+
+.queueTitle {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.queueMeta {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.queuePriority {
+  font-size: 8px;
+  color: #fbbf24;
+  letter-spacing: 1px;
+}
+
+.queueDue {
+  font-size: 8px;
+  color: var(--due-color, rgba(255, 255, 255, 0.25));
+  white-space: nowrap;
+}
+
+.snoozedNote {
+  padding: 8px 18px;
+  font-size: 10px;
+  color: rgba(96, 165, 250, 0.35);
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  letter-spacing: 1px;
+  flex-shrink: 0;
+}
+
+/* ── Timer Section (center top) ── */
+.timerSection {
+  padding: 16px 24px 14px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.timerLabel {
+  font-size: 9px;
+  letter-spacing: 4px;
+  color: rgba(255, 255, 255, 0.18);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+
+.timerDisplay {
+  font-size: 44px;
+  font-weight: 700;
+  letter-spacing: 5px;
+  color: rgba(255, 255, 255, 0.15);
+  line-height: 1;
+  transition: color 0.4s, text-shadow 0.4s;
+  font-variant-numeric: tabular-nums;
+}
+
+.timerDisplay[data-mode="focus"] {
+  color: #4ade80;
+  text-shadow: 0 0 24px rgba(74, 222, 128, 0.35);
+}
+
+.timerDisplay[data-mode="break"] {
+  color: #60a5fa;
+  text-shadow: 0 0 24px rgba(96, 165, 250, 0.35);
+}
+
+.timerTrack {
+  height: 2px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 1px;
+  margin: 10px 0;
+  overflow: hidden;
+}
+
+.timerFill {
+  height: 100%;
+  background: var(--timer-color, rgba(255, 255, 255, 0.15));
+  border-radius: 1px;
+  transition: width 1s linear;
+  box-shadow: 0 0 6px var(--timer-color, transparent);
+}
+
+.timerBtns {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+
+.timerBtn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 3px;
+  padding: 4px 13px;
+  color: rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  font-size: 9px;
+  font-family: "DM Mono", monospace;
+  letter-spacing: 2px;
+  transition: all 0.15s;
+}
+
+.timerBtn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.timerBtnRunning {
+  background: rgba(74, 222, 128, 0.08) !important;
+  border-color: rgba(74, 222, 128, 0.25) !important;
+  color: #4ade80 !important;
+}
+
+/* ── Focus Card (center main) ── */
+.focusCard {
+  flex: 1;
+  padding: 20px 24px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.focusCardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nowFocusing {
+  font-size: 9px;
+  letter-spacing: 4px;
+  color: rgba(0, 255, 100, 0.4);
+}
+
+.focusPriority {
+  font-size: 10px;
+  color: #fbbf24;
+  letter-spacing: 2px;
+}
+
+/* The task title — this is THE most important element */
+.focusTitle {
+  font-size: 28px;
+  font-weight: 800;
+  color: #f5f5ff;
+  margin: 0;
+  font-family: "Syne", sans-serif;
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+  /* Subtle glow to make it feel "active" */
+  text-shadow: 0 0 40px rgba(200, 200, 255, 0.08);
+}
+
+.focusMemo {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.35);
+  margin: 0;
+  font-family: "DM Sans", sans-serif;
+  line-height: 1.6;
+}
+
+.focusDue {
+  font-size: 11px;
+  color: var(--due-color, rgba(255, 255, 255, 0.3));
+  letter-spacing: 1px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  background: color-mix(in srgb, var(--due-color, rgba(255,255,255,0.1)) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--due-color, rgba(255,255,255,0.1)) 20%, transparent);
+  border-radius: 4px;
+  width: fit-content;
+}
+
+/* ── Action Buttons ── */
+.focusActions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.actionBtn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 9px 6px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.12s;
+  color: rgba(255, 255, 255, 0.35);
+  font-family: "DM Mono", monospace;
+}
+
+.actionBtn:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.actionIcon {
+  font-size: 15px;
+  line-height: 1;
+}
+
+.actionLabel {
+  font-size: 8px;
+  letter-spacing: 1px;
+  color: inherit;
+}
+
+.actionKbd {
+  font-size: 7px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  padding: 1px 4px;
+  color: rgba(255, 255, 255, 0.2);
+  font-family: inherit;
+}
+
+/* Action color variants */
+.actionGreen  { border-color: rgba(74, 222, 128, 0.2);  color: #4ade80; }
+.actionGreen:hover  { background: rgba(74, 222, 128, 0.09);  border-color: rgba(74, 222, 128, 0.4); }
+
+.actionPurple { border-color: rgba(167, 139, 250, 0.2); color: #a78bfa; }
+.actionPurple:hover { background: rgba(167, 139, 250, 0.09); border-color: rgba(167, 139, 250, 0.4); }
+
+.actionYellow { border-color: rgba(251, 191, 36, 0.2);  color: #fbbf24; }
+.actionYellow:hover { background: rgba(251, 191, 36, 0.09);  border-color: rgba(251, 191, 36, 0.4); }
+
+.actionBlue   { border-color: rgba(96, 165, 250, 0.2);  color: #60a5fa; }
+.actionBlue:hover   { background: rgba(96, 165, 250, 0.09);  border-color: rgba(96, 165, 250, 0.4); }
+
+.actionRed    { border-color: rgba(248, 113, 113, 0.2); color: #f87171; }
+.actionRed:hover    { background: rgba(248, 113, 113, 0.09); border-color: rgba(248, 113, 113, 0.4); }
+
+.actionMuted  { border-color: rgba(255, 255, 255, 0.08); color: rgba(255, 255, 255, 0.3); }
+.actionMuted:hover  { background: rgba(255, 255, 255, 0.06); color: rgba(255, 255, 255, 0.6); }
+
+/* ── Focus Empty ── */
+.focusEmpty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 40px 24px;
+}
+
+.focusEmptyIcon {
+  font-size: 44px;
+}
+
+.focusEmptyLabel {
+  font-size: 13px;
+  letter-spacing: 4px;
+  color: rgba(0, 255, 100, 0.35);
+}
+
+.focusEmptySub {
+  font-size: 10px;
+  color: rgba(96, 165, 250, 0.35);
+  letter-spacing: 2px;
+}
+
+/* ── Progress Section (right) ── */
+.progressSection {
+  padding: 12px 18px 14px;
+  flex-shrink: 0;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.statCell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.statNum {
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.statLabel {
+  font-size: 7px;
+  letter-spacing: 1.5px;
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.progressPct {
+  font-size: 10px;
+  color: rgba(0, 255, 100, 0.4);
+  letter-spacing: 1px;
+}
+
+.progressTrack {
+  height: 3px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, #4ade80, #22d3ee);
+  border-radius: 2px;
+  transition: width 0.5s ease;
+  box-shadow: 0 0 8px rgba(74, 222, 128, 0.3);
+}
+
+/* ── Completed List (right) ── */
+.completedList {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px;
+  min-height: 0;
+}
+
+.completedList::-webkit-scrollbar { width: 3px; }
+.completedList::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.06); }
+
+.completedRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 3px;
+  transition: background 0.1s;
+}
+
+.completedRow:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.completedCheck {
+  font-size: 9px;
+  color: rgba(74, 222, 128, 0.4);
+  flex-shrink: 0;
+}
+
+.completedTitle {
+  flex: 1;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.25);
+  text-decoration: line-through;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: "DM Sans", sans-serif;
+}
+
+.completedMore {
+  text-align: center;
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.12);
+  padding: 6px;
+  letter-spacing: 1px;
+}
+
+.btnUncomplete {
+  background: none;
+  border: none;
+  color: rgba(167, 139, 250, 0.3);
+  cursor: pointer;
+  font-size: 10px;
+  font-family: "DM Mono", monospace;
+  padding: 2px 5px;
+  border-radius: 2px;
+  transition: all 0.12s;
+  flex-shrink: 0;
+}
+
+.btnUncomplete:hover {
+  background: rgba(167, 139, 250, 0.1);
+  color: #a78bfa;
+}
+
+/* ── Keyboard Shortcuts (right bottom) ── */
+.shortcuts {
+  padding: 8px 18px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.shortcut {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.kbd {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 3px;
+  padding: 2px 6px;
+  font-size: 9px;
+  font-family: "DM Mono", monospace;
+  color: rgba(255, 255, 255, 0.3);
+  min-width: 46px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.shortcutLabel {
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.2);
+  letter-spacing: 1px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 960px) {
+  .grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    background: none;
+    gap: 0;
+    overflow-y: auto;
+  }
+
+  .panel {
+    border-bottom: 1px solid rgba(0, 255, 100, 0.06);
+    overflow: visible;
+  }
+
+  .queueList {
+    max-height: 180px;
+  }
+
+  .completedList {
+    max-height: 140px;
+  }
+
+  .focusActions {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .statsGrid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}

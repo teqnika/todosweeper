@@ -8,6 +8,7 @@ import EditModal from "./components/EditModal.jsx";
 import DeleteConfirmModal from "./components/DeleteConfirmModal.jsx";
 import ListView from "./components/ListView.jsx";
 import LoginScreen from "./components/LoginScreen.jsx";
+import ControlPanel from "./components/ControlPanel.jsx";
 import styles from "./App.module.css";
 
 // VITE_API_URL が設定されていて VITE_SKIP_AUTH が未設定のとき認証が必要
@@ -36,7 +37,7 @@ export default function App() {
   const [newMemo, setNewMemo] = useState("");
   const [showBulk, setShowBulk] = useState(false);
   const [tab, setTab] = useState("stack");
-  const [screen, setScreen] = useState("main");
+  const [screen, setScreen] = useState("control");
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [editingTodo, setEditingTodo] = useState(null);
 
@@ -180,6 +181,59 @@ export default function App() {
     </div>
   );
 
+  // ── 管制画面 ──
+  if (screen === "control") {
+    return (
+      <>
+        <ControlPanel
+          todos={todos}
+          done={done}
+          trash={trash}
+          history={history}
+          user={user}
+          onLogout={() => { clearToken(); setUser(null); }}
+          onSwipe={handleSwipe}
+          onSnooze={handleSnooze}
+          onUndo={handleUndo}
+          onUncomplete={handleUncomplete}
+          onShowAdd={() => setShowAdd(true)}
+          onShowBulk={() => setShowBulk(true)}
+          onSwitchToList={() => setScreen("list")}
+          onSwitchToSwipe={() => setScreen("main")}
+          setDeleteTarget={setDeleteTarget}
+          setEditingTodo={setEditingTodo}
+        />
+        {Toast}
+        {showAdd && (
+          <div className={styles.addOverlay} onClick={() => setShowAdd(false)}>
+            <div className={styles.addSheet} onClick={e => e.stopPropagation()}>
+              <h3 className={styles.addTitle}>新しいTodo</h3>
+              <input
+                autoFocus
+                className={styles.textInput}
+                value={newTitle}
+                onChange={e => setNewTitle(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && handleAdd()}
+                placeholder="タイトル"
+              />
+              <textarea
+                className={styles.textareaInput}
+                value={newMemo}
+                onChange={e => setNewMemo(e.target.value)}
+                placeholder="メモ（任意）"
+                rows={3}
+              />
+              <button className={styles.btnSubmit} onClick={handleAdd}>追加する</button>
+            </div>
+          </div>
+        )}
+        {showBulk && <BulkAddModal onClose={() => setShowBulk(false)} onAdd={handleBulkAdd} />}
+        {deleteTarget && <DeleteConfirmModal todo={deleteTarget} onCancel={() => setDeleteTarget(null)} onConfirm={confirmSwipeDelete} />}
+        {editingTodo && <EditModal todo={editingTodo} onClose={() => setEditingTodo(null)} onSave={(id, updates) => { handleEdit(id, updates); setEditingTodo(null); }} />}
+      </>
+    );
+  }
+
   // ── 一覧画面 ──
   if (screen === "list") {
     return (
@@ -224,6 +278,9 @@ export default function App() {
               <img src={user.picture} alt={user.name} className={styles.userAvatar} referrerPolicy="no-referrer" />
             </button>
           )}
+          <button className={styles.btnIcon} onClick={() => setScreen("control")} title="管制画面">
+            ⊞
+          </button>
           <button className={styles.btnIcon} onClick={() => setScreen("list")}>
             ☰
             {notifCount > 0 && (
